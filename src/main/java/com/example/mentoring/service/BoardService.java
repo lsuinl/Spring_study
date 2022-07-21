@@ -8,63 +8,46 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
-/**
- * Service 는 기능을 구현하는 것에 초점을 둔 클래스입니다.
- * Repository 를 불러와서, 데이터베이스에 데이터를 넣거나 혹은 가져와서 기능을 구현합니다.
- * <p>
- * Service 클래스는 Controller 에서 불러와서 사용합니다.
- */
-
-@RequiredArgsConstructor
 @Service
+@RequiredArgsConstructor
 public class BoardService {
 
     private final BoardRepository boardRepository;
 
-    // 게시글 전체 조회
     @Transactional(readOnly = true)
-    public List<Board> findAllBoard() {
-        Board board = boardRepository.findById(1).get();
-
-        return boardRepository.findAll();
+    public List<Board> getBoards() {
+        List<Board> boards = boardRepository.findAll();
+        return boards;
     }
 
-    // 게시글 단건 조회
     @Transactional(readOnly = true)
-    public Board findBoard(int id) {
-        return boardRepository.findById(id).orElseThrow(IllegalArgumentException::new);
-    }
-
-    // 게시글 작성
-    @Transactional
-    public Board writeBoard(Board boardReq) {
-        Board board = new Board(boardReq.getTitle(), boardReq.getContent(), boardReq.getWriter());
-        boardRepository.save(board);
+    public Board getBoard(Long id) {
+        Board board = boardRepository.findById(id).get();
         return board;
     }
 
-
-    // 게시글 수정
     @Transactional
-    public Board editBoard(int id, Board updateBoard) {
-        Board board = boardRepository.findById(id).orElseThrow(() -> {
-            return new IllegalArgumentException();
-        });
+    public Board save(Board board) {
+        return boardRepository.save(board);
+    }
 
+    @Transactional
+    // Transactional 을 붙이면 더티체킹이 일어나서, 저장하지 않아도 메서드가 성공적으로 끝나면 저장이 된다.
+    public Board editBoard(Long id, Board updateBoard) {
+        // 1. 기존 게시물을 꺼내온다
+        Board board = boardRepository.findById(id).get();
+
+        // 2. 기존 게시물에, updateBoard 정보를 덮어씌워준다.
         board.setTitle(updateBoard.getTitle());
         board.setContent(updateBoard.getContent());
+
         return board;
     }
 
 
-    // 게시글 삭제
     @Transactional
-    public void deleteBoard(int id) {
-        Board board = boardRepository.findById(id).orElseThrow(() -> {
-            return new IllegalArgumentException();
-        });
-
+    public void deleteBoard(Long id) {
         boardRepository.deleteById(id);
     }
-}
 
+}
